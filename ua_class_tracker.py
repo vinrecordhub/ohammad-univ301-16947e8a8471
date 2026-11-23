@@ -154,7 +154,7 @@ def notify(title, body, urgent=True):
             req = urllib.request.Request(
                 f"https://ntfy.sh/{NTFY_TOPIC}",
                 data=body.encode(),
-                headers={"Title": title, "Priority": "urgent" if urgent else "default",
+                headers={"Title": title.encode("ascii", "ignore").decode().strip(), "Priority": "urgent" if urgent else "default",
                          "Tags": "rotating_light" if urgent else "information_source",
                          "Click": UACCESS_URL},
             )
