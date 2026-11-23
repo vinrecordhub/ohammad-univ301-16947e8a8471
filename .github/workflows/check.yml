@@ -33,7 +33,7 @@ jobs:
 
       - name: Install
         run: |
-          pip install playwright
+          pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 
       # Remember last-seen statuses between runs so you get one alert per change
