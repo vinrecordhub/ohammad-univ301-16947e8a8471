@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "*/5 * * * *"     # every 5 min (GitHub may delay runs a few minutes at busy times)
   workflow_dispatch:           # "Run workflow" button for manual tests
+    inputs:
+      test_alert:
+        description: "Send a test notification to my phone"
+        type: boolean
+        default: false
 
 concurrency:
   group: ua-class-tracker
@@ -43,6 +48,10 @@ jobs:
           path: state
           key: state-${{ github.run_id }}
           restore-keys: state-
+
+      - name: Send test notification
+        if: ${{ inputs.test_alert }}
+        run: python ua_class_tracker.py --test-alert
 
       - name: Check sections
         run: |
