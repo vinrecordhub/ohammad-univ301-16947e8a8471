@@ -1,0 +1,57 @@
+name: UA class tracker
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"     # every 5 min (GitHub may delay runs a few minutes at busy times)
+  workflow_dispatch:           # "Run workflow" button for manual tests
+
+concurrency:
+  group: ua-class-tracker
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+      STATE_FILE: state/state.json
+      LOG_FILE: state/run.log
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Cache Playwright browser
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-v1
+
+      - name: Install
+        run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+
+      # Remember last-seen statuses between runs so you get one alert per change
+      - name: Restore last state
+        uses: actions/cache/restore@v4
+        with:
+          path: state
+          key: state-${{ github.run_id }}
+          restore-keys: state-
+
+      - name: Check sections
+        run: |
+          mkdir -p state
+          python ua_class_tracker.py --once
+
+      - name: Save state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: state
+          key: state-${{ github.run_id }}
